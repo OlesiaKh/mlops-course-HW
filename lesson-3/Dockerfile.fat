@@ -1,0 +1,16 @@
+FROM python:3.10
+
+# Робоча директорія всередині контейнера
+WORKDIR /app
+
+# Оновлюємо pip і ставимо залежності
+RUN python -m pip install --upgrade pip && \
+    python -m pip install torch torchvision pillow
+
+# Копіюємо модель та скрипт інференсу
+COPY model.pt ./model.pt
+COPY inference.py ./inference.py
+
+# За замовчуванням запускатимемо inference.py
+ENTRYPOINT ["python", "inference.py"]
+
