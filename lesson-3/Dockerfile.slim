@@ -1,0 +1,32 @@
+# Етап 1: збираємо середовище з усіма залежностями
+FROM python:3.10-slim AS builder
+
+WORKDIR /app
+
+# Створюємо віртуальне середовище у builder-етапі
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Встановлюємо потрібні пакети
+RUN python -m pip install --upgrade pip && \
+    python -m pip install torch torchvision pillow
+
+# Копіюємо модель і скрипт інференсу в builder-етап
+COPY model.pt ./model.pt
+COPY inference.py ./inference.py
+
+# Етап 2: мінімальний runtime
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Копіюємо готове віртуальне середовище і файли з builder
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /app/model.pt ./model.pt
+COPY --from=builder /app/inference.py ./inference.py
+
+# Встановлюємо шлях до віртуального середовища
+ENV PATH="/opt/venv/bin:$PATH"
+
+# За замовчуванням запускатимемо inference.py
+ENTRYPOINT ["python", "inference.py"]
