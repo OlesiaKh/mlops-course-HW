@@ -1,0 +1,15 @@
+stages:
+  - train
+
+train-model:
+  stage: train
+  image: amazon/aws-cli:2.15.0
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+  script:
+    - aws --version
+    - aws configure set region eu-north-1
+    - aws stepfunctions start-execution \
+        --state-machine-arn "$STATE_MACHINE_ARN" \
+        --name "train-$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA" \
+        --input "{\"source\":\"gitlab-ci\",\"commit\":\"$CI_COMMIT_SHORT_SHA\",\"pipeline_id\":\"$CI_PIPELINE_ID\"}"
